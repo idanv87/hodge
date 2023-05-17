@@ -33,70 +33,71 @@ def is_wellcentered(pts, tol=1e-8):
     barycentric_coordinates = circumcenter_barycentric(pts)    
     return min(barycentric_coordinates) > tol
 
-def circumcenter_barycentric(pts):
-    """Barycentric coordinates of the circumcenter of a set of points.
+def circumcenter_barycentric(pts, weights=None):
+    # pts = asarray(pts)
+
+    # rows,cols = pts.shape
+
+    # assert(rows <= cols + 1)    
+
+    # A = bmat( [[ 2*dot(pts,pts.T), ones((rows,1)) ],
+    #            [  ones((1,rows)) ,  zeros((1,1))  ]] )
+
+    # b = hstack((sum(pts * pts, axis=1),ones((1))))
+    # x = solve(A,b)
+    # bary_coords = x[:-1]  
+
+    # return bary_coords
     
-    Parameters
-    ----------
-    pts : array-like
-        An N-by-K array of points which define an (N-1)-simplex in K dimensional space.
-        N and K must satisfy 1 <= N <= K + 1 and K >= 1.
 
-    Returns
-    -------
-    coords : ndarray
-        Barycentric coordinates of the circumcenter of the simplex defined by pts.
-        Stored in an array with shape (K,)
-        
-    Examples
-    --------
-    >>> from pydec.math.circumcenter import *
-    >>> circumcenter_barycentric([[0],[4]])           # edge in 1D
-    array([ 0.5,  0.5])
-    >>> circumcenter_barycentric([[0,0],[4,0]])       # edge in 2D
-    array([ 0.5,  0.5])
-    >>> circumcenter_barycentric([[0,0],[4,0],[0,4]]) # triangle in 2D
-    array([ 0. ,  0.5,  0.5])
 
-    See Also
-    --------
-    circumcenter_barycentric
-   
-    References
-    ----------
-    Uses an extension of the method described here:
-    http://www.ics.uci.edu/~eppstein/junkyard/circumcenter.html
-
-    """    
 
     pts = asarray(pts)
-
     rows,cols = pts.shape
+    assert(rows <= cols + 1) 
 
-    assert(rows <= cols + 1)    
+    if rows==1:
+        bary_coords=np.array([1.])
+    if rows==2:
+        p1=pts[0,:]
+        p2=pts[1,:]
 
-    A = bmat( [[ 2*dot(pts,pts.T), ones((rows,1)) ],
-               [  ones((1,rows)) ,  zeros((1,1))  ]] )
+        center=np.array(circumcenter(pts,weights)[0])
+        rhs=center-p2
+        lhs=p1-p2
+        if abs(lhs[0])<1e-10:
+            l1=rhs[1]/lhs[1]
+        else:
+            l1=rhs[0]/lhs[0]
+    
+        bary_coords=np.array([l1,1-l1])
 
-    b = hstack((sum(pts * pts, axis=1),ones((1))))
-    x = solve(A,b)
-    bary_coords = x[:-1]  
+    if rows==3:
+        center=np.array(circumcenter(pts, weights)[0])
+        A = bmat( [[ pts.T], [ones((1,rows))] ]
+              )
 
+        b = hstack((np.array(center),np.array([1])))
+
+        x = solve(A,b)
+
+        bary_coords = x 
     return bary_coords
     
-def circumcenter(pts):
-
+    
+def circumcenter(pts,weights):
+    
     pts = asarray(pts)      
-    bary_coords = circumcenter_barycentric(pts)
-    center=weighted_circ(pts)
+    # bary_coords = circumcenter_barycentric(pts)
     # center = dot(bary_coords,pts)
+    center=weighted_circ(pts,weights)
     radius = norm(pts[0,:] - center)
     return (center,radius)
     
     
     
-def weighted_circ(pts,weights=None):
-    weights=[1,1.2,1]
+def weighted_circ(pts,weights):
+
     s=pts[0]
     if len(pts)==2:
             n=(pts[1]-pts[0])/unsigned_volume(pts)
@@ -104,6 +105,9 @@ def weighted_circ(pts,weights=None):
             unsigned_volume([pts[0],pts[1]])**2+weights[0]-weights[1]
             )*n
     if len(pts)==3:
+        
+        
+
         A=np.array([[0,-1],[1,0]])
         n1=np.dot(A,pts[0]-pts[2])
         n2=np.dot(A,pts[1]-pts[0])
@@ -113,5 +117,6 @@ def weighted_circ(pts,weights=None):
             s=s+(1/(2*math.factorial(k)*unsigned_volume(pts)))* (
             unsigned_volume([pts[0],pts[i+1]])**2+weights[0]-weights[i+1]
             )*n[i]   
+        
     return s
     

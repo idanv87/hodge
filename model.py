@@ -1,12 +1,12 @@
-import tensorflow as tf
-
-
-import numpy as np
-import matplotlib.pyplot as plt
 import os
 import time
-from utils import MultiHeadAttention
+
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
 from numpy import random
+
+from utils import MultiHeadAttention, train_step
 
 input_seq_length = 5  # Maximum length of the input sequence
 h = 1  # Number of self-attention heads
@@ -31,18 +31,39 @@ class my_model(tf.keras.Model):
     return self.layer1(x,x,x)  
 
 L=my_model(h, d_k, d_v, d_model)
+L.optimizer=tf.keras.optimizers.SGD(learning_rate=0.01)
+
+epochs = 2
+for epoch in range(epochs):
+    print("\nStart of epoch %d" % (epoch,))
+    start_time = time.time()
+
+    # Iterate over the batches of the dataset.
+    for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
+        loss_value = train_step(x_batch_train, y_batch_train)
+
+        if step % 200 == 0:
+            print(
+                "Training loss (for one batch) at step %d: %.4f"
+                % (step, float(loss_value))
+            )
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
+
+    for x_batch_val, y_batch_val in val_dataset:
+        test_step(x_batch_val, y_batch_val)
 
 
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
-with tf.GradientTape() as tape:
-  loss=tf.keras.losses.MeanSquaredError()(L(x),y)
-  print(loss)
-gradients = tape.gradient(loss, L.trainable_variables)
+
+# optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+# with tf.GradientTape() as tape:
+#   loss=tf.keras.losses.MeanSquaredError()(L(x),y)
+#   print(loss)
+# gradients = tape.gradient(loss, L.trainable_variables)
+# # print(loss)
+# optimizer.apply_gradients(zip(gradients, L.trainable_variables))
+# loss=tf.keras.losses.MeanSquaredError()(L(x),y)
 # print(loss)
-optimizer.apply_gradients(zip(gradients, L.trainable_variables))
-loss=tf.keras.losses.MeanSquaredError()(L(x),y)
-print(loss)
-# print(x1[5]-x2[5])
+# # print(x1[5]-x2[5])
 
 # print(np.array(x1))
 

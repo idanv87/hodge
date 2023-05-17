@@ -12,15 +12,14 @@ See arXiv:0810.3434v3 [math.NA] on http://arxiv.org/abs/0810.3434
 import math
 import numpy as np
 import sys
-# sys.path.append('/Users/idanversano/Documents/clones2/pydec/pydec')
-from pydec.pydec.math import *
-
+sys.path.append('/Users/idanversano/Documents/clones2/pydec/pydec/')
+from  pydec.pydec.dec import simplicial_complex as sim
 # pydec.math.circumcenter.circumcenter(pts)
-# vertices=np.array([[0,0],[1,0],[1,1],[0,1],[0.5,0.5],[0.5,0.6]])
-# triangles=np.array([[0,1,4],[1,2,4], [4,3,0],[4,2,5],[4,5,3],[2,3,5]])
-# f=[]
-# u=[]
-# sc = sim((vertices,triangles)) 
+vertices=np.array([[0,0],[1,0],[1,1],[0,1],[0.5,0.5],[0.5,0.6]])
+triangles=np.array([[0,1,4],[1,2,4], [4,3,0],[4,2,5],[4,5,3],[2,3,5]])
+sc = sim((vertices,triangles)) 
+print(sc[1].circumcenter)
+
 
 # circumcenter(vertices)
 

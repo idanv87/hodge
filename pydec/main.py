@@ -1,25 +1,49 @@
-"""
-Darcy flow in a triangle mesh of a planar domain, with constant
-velocity prescribed on boundary. 
 
-Reference :
-
-Numerical method for Darcy flow derived using Discrete Exterior Calculus
-A. N. Hirani, K. B. Nakshatrala, J. H. Chaudhry
-See arXiv:0810.3434v3 [math.NA] on http://arxiv.org/abs/0810.3434
-
-"""
-import math
-import numpy as np
 import sys
-from pydec.dec import simplicial_complex as sim
-# sys.path.append('/Users/idanversano/Documents/clones2/pydec/pydec')
+import math
 
-# pydec.math.circumcenter.circumcenter(pts)
+from matplotlib.pyplot import gca, show, scatter
+import numpy as np
+import scipy
+
+from pydec.dec import simplicial_complex as sim
+from utils import solve_possion, create_data, plot_mesh
+# sys.path.append('/Users/idanversano/Documents/clones2/pydec/pydec')
+# # pydec.math.circumcenter.circumcenter(pts)
 vertices=np.array([[0,0],[1,0],[1,1],[0,1],[0.5,0.5],[0.5,0.6]])
-triangles=np.array([[0,1,4],[1,2,4], [4,3,0],[4,2,5],[4,5,3],[2,3,5]])
-sc = sim((vertices,triangles)) 
-print(sc[1].circumcenter)
+triangles=np.array([[0,1,4],[1,2,4], [0,4,3],[4,2,5],[4,5,3],[2,3,5]])
+
+
+
+plot_mesh(vertices,triangles)
+
+weights=np.random.random(len(vertices))
+weights=weights/weights.sum()*0+1
+f,u = create_data(vertices,triangles)
+sc = sim((vertices,triangles,weights))
+
+# print(sc[2].circumcenter)
+
+solution=solve_possion(f,sc, u)
+print(solution[-2:]-u[-2:])
+
+# def loss(weights,*args):
+#     vertices=args[0]
+#     triangles=args[1]
+#     sc = sim((vertices,triangles,weights)) 
+#     solution=solve_possion(f,sc, u)
+#     return np.linalg.norm(solution[-2:]-u[-2:])
+# cons = ({'type': 'eq', 'fun': lambda x: x.sum()-1})
+
+# res = scipy.optimize.minimize(loss, weights, args=(vertices,triangles), method='SLSQP', constraints=cons, options={'disp': False})
+# print(res)
+
+
+
+
+
+
+
 
 
 # circumcenter(vertices)

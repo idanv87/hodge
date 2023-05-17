@@ -60,6 +60,7 @@ class simplicial_complex(list):
 
         self.vertices  = self.mesh['vertices']
         self.simplices = self.mesh['elements']
+        self.weights=arg1[2]
     
         self.build_complex(self.simplices)
     
@@ -189,8 +190,21 @@ class simplicial_complex(list):
                                         dim + 1))
         
         for i,s in enumerate(data.simplices):
-            pts = self.vertices[[x for x in s],:]
-            data.bary_circumcenter[i] = circumcenter_barycentric(pts)
+            pts = self.vertices[[x for x in s],:].copy()
+            if data.simplex_parity[i]>0:
+            # if 0:    
+                pts[[0,1]]=pts[[1,0]]
+
+                center=circumcenter_barycentric(pts, self.weights)
+                center[0], center[1]=center[1],center[0]
+
+                data.bary_circumcenter[i] = center
+             
+            else:
+                   data.bary_circumcenter[i] = circumcenter_barycentric(pts, self.weights)
+                # self.weights
+
+ 
             
     def compute_circumcenters(self,dim):
         """Compute circumcenters for all simplices at a given dimension
@@ -200,8 +214,20 @@ class simplicial_complex(list):
                                        self.embedding_dimension()))
         
         for i,s in enumerate(data.simplices):
-            pts = self.vertices[[x for x in s],:]
-            data.circumcenter[i] = circumcenter(pts)[0]
+            pts = self.vertices[[x for x in s],:].copy()
+            if data.simplex_parity[i]>0:
+            # if 0:    
+                pts[[0,1]]=pts[[1,0]]
+                data.circumcenter[i] =circumcenter(pts, self.weights)[0]
+             
+            else:
+                   data.circumcenter[i] = circumcenter(pts, self.weights)[0]
+                    
+                # self.weights
+
+
+            
+            
 
     def compute_primal_volume(self,dim):
         """Compute the volume of all simplices for a given dimension
@@ -289,6 +315,7 @@ class simplicial_complex(list):
                 face_count[f] += 1
         
         boundary_faces = [f for f, count in face_count.items() if count == 1]
+    
         return boundary_faces
         
 

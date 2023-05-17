@@ -4,6 +4,10 @@ from keras.backend import softmax
 import tensorflow as tf
 import numpy as np
 import scipy
+import math
+
+from matplotlib.pyplot import gca, show
+
 
 # Implementing the Scaled-Dot Product Attention
 class DotProductAttention(Layer):
@@ -88,8 +92,8 @@ def objective(x,*args):
     return np.linalg.norm(y)
 
 
-def solve_possion(f,sc):
-        cons = ({'type': 'eq', 'fun': lambda x: x.sum()})
+def solve_possion(f,sc, u):
+        cons = ({'type': 'eq', 'fun': lambda x: x.sum()-u.sum()})
         d0 = sc[0].d; 
         star1 = sc[1].star; 
 
@@ -98,11 +102,11 @@ def solve_possion(f,sc):
         star2=sc[2].star
 
         star0_inv=star0.copy()
-
         for i in range(star0.shape[0]):
             star0_inv[i,i]=1/star0[i,i]
         M=star0_inv@(-d0.transpose())@star1@d0
-        res = scipy.optimize.minimize(objective, f*0+2, args=(M,f), method='SLSQP', constraints=cons, options={'disp': False})
+        res = scipy.optimize.minimize(objective, u*0+2, args=(M,f), method='SLSQP', constraints=cons, options={'disp': False})
+        return res['x']
 
 def create_data(vertices,triangles,weights=None):
     f=[]
@@ -110,5 +114,10 @@ def create_data(vertices,triangles,weights=None):
     for v in vertices:
       f.append(-2*math.pi**2*np.cos(math.pi*v[0])*np.cos(math.pi*v[1]))
       u.append(np.cos(math.pi*v[0])*np.cos(math.pi*v[1]))
-    return f,u  
+    return np.array(f), np.array(u)  
 
+
+def plot_mesh(v,t):
+    ax = gca()
+    ax.triplot(v[:,0], v[:,1], t)
+    # show()
