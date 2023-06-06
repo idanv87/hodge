@@ -13,7 +13,7 @@ from numpy import mat, zeros, sort, asarray, loadtxt, array, dot, \
      concatenate, sign, vstack, argmax, nonzero
 from numpy.linalg import norm, det
 from scipy.sparse import bmat
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve  
 from matplotlib.pylab import figure, gca, triplot, show
 from pydec import simplicial_complex, simplex_quivers, signed_volume
 

@@ -109,12 +109,12 @@ def weighted_circ(pts,weights):
         
     
         A=torch.tensor([[0,-1],[1,0]], dtype=torch.float32)
-        print(pts.dtype)
         n1=torch.matmul(A,pts[0]-pts[2])
         n2=torch.matmul(A,pts[1]-pts[0])
         n=[n1,n2]
         k=2
         for i in range(k):
+           
             s=s+(1/(2*math.factorial(k)*unsigned_volume(pts)))* (
             unsigned_volume(
                 torch.vstack((pts[0],pts[i+1]))

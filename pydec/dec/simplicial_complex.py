@@ -113,6 +113,7 @@ class simplicial_complex(list):
         
         if is_primal:
             c.v = sparse.identity(self[dimension].num_simplices)
+            # print(c.v)
         else:
             c.v = sparse.identity(self[N - dimension].num_simplices)
         
@@ -125,6 +126,8 @@ class simplicial_complex(list):
         s = simplex_array.copy()
         parity = simplex_array_parity(s)
         s.sort()
+       
+        # print(s)
 
         simplices = [s]
         chain_complex = []
@@ -193,7 +196,8 @@ class simplicial_complex(list):
         
         for i,s in enumerate(data.simplices):
             pts = self.vertices[[x for x in s],:]
-            data.bary_circumcenter[i] = circumcenter_barycentric(pts,self.weights)
+           
+            data.bary_circumcenter[i] = circumcenter_barycentric(pts,self.weights[s])
             
     def compute_circumcenters(self,dim):
         """Compute circumcenters for all simplices at a given dimension
@@ -204,7 +208,7 @@ class simplicial_complex(list):
         
         for i,s in enumerate(data.simplices):
             pts = self.vertices[[x for x in s],:]
-            data.circumcenter[i] = circumcenter(pts,self.weights)[0]
+            data.circumcenter[i] = circumcenter(pts,self.weights[s])[0]
 
     def compute_primal_volume(self,dim):
         """Compute the volume of all simplices for a given dimension

@@ -5,6 +5,7 @@ import pickle
 import torch
 
 from utils import *
+from sklearn.model_selection import train_test_split
 
 path1='/Users/idanversano/Documents/clones/pydec/data/input/'
 path2='/Users/idanversano/Documents/clones/pydec/data/output/'
@@ -13,16 +14,21 @@ for path in pathes:
   if not os.path.exists(path):
         os.makedirs(path)
 
-v=np.array([[0,0],[1,0],[-1,1]])    
-t=np.array([[0,1,2]])
 
-f1,u1=create_data(v)
-f2,u2=create_data(v)
-u=[u1,u2]
-f=[f1,f2]
-for i in range(len(u)):
-    pickle.dump(f[i], open(path1+'f'+str(i) , "wb"))
-    pickle.dump(u[i], open(path2+'u'+str(i) , "wb"))
+v,t,boundary_ind,interior_ind=create_mesh()
+kx=range(10)
+ky=kx
+u=[]
+f=[]
+for k1 in kx:
+    F,U=create_data(v,k1,k1)
+    u.append(U)
+    f.append(F)
 
+pickle.dump(f, open(path1+'f.pickle' , "wb"))
+pickle.dump(u, open(path2+'u.pickle' , "wb"))
+# for i in range(len(u)):
+#     pickle.dump(f[i], open(path1+'f'+str(i) , "wb"))
+#     pickle.dump(u[i], open(path2+'u'+str(i) , "wb"))
 
 

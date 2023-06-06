@@ -9,59 +9,105 @@ import numpy as np
 from pydec.dec import simplicial_complex
 from pydec.math.circumcenter import weighted_circ, circumcenter, circumcenter_barycentric
 import torch
+import torch.nn as nn
+import torch.optim as optim
+import pickle
+
+from sklearn.model_selection import train_test_split
+
+
+
+path1='/Users/idanversano/Documents/clones/pydec/data/input/'
+path2='/Users/idanversano/Documents/clones/pydec/data/output/'
 # from pydec.math import circumcenter
 
+from utils import *
+
+v,t,boundary_ind,interior_ind=create_mesh()
+w0=np.random.rand(len(v))*0
+w=torch.tensor(w0,requires_grad=True, dtype=torch.float32)
+batch_size=3
+# sc=simplicial_complex((v,t))
+
+# sc.weights=w
+
+# sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=torch.float32)
+# sc[0].d=torch.tensor(sc[0].d.todense(), requires_grad=False, dtype=torch.float32)
+
+
+
+f,u=load_data()
+Xtrain, Xtest, Ytrain, Ytest = train_test_split( f, u, test_size=0.33, random_state=42)
+
+# u=torch.reshape(torch.tensor(np.array(u),dtype=torch.float32), np.array(u).shape)
+# f=torch.reshape(torch.tensor(np.array(f),dtype=torch.float32), np.array(f).shape)
+Xtrain=batch_divide(Xtrain, batch_size)
+Ytrain=batch_divide(Ytrain, batch_size)
+# print(len(Xtrain))
+# Xtrain=[f]
+# Ytrain=[u]
+
+    
 
 class MyModel(nn.Module):
     """ Custom Linear layer but mimics a standard linear layer """
-    def __init__(self,w):
+    def __init__(self,weight, interior_indices=interior_ind):
         super().__init__()
-        weights = torch.Tensor(w)
-        self.weights = nn.Parameter(weights)  # nn.Parameter is a Tensor that's a module parameter.
+        self.weights = nn.Parameter(weight)  
+        # self.interior_indices=interior_indices
+        self.v,self.t,self.boundary_ind,self.interior_indices=create_mesh()
 
-    def forward(self, X,sc):
-        num_bathches=X.shape[0]
-        loss=[]
-        sc.weights=self.weights
-        M=sc[1].star
-        for i in range(num_bathches):
-            loss.append(torch.linalg.solve(M,X[i]))
-            return loss
     
-b=torch.tensor([0,1.,1],requires_grad=False)
-v=np.array([[0,0],[1,0],[-1,1]])    
-t=np.array([[0,1,2]])
-w=torch.tensor([0,1.,1],requires_grad=True)
-sc=simplicial_complex((v,t))
-sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=torch.float32)
+       
+
+    def forward(self, X):
+        batch_size=X.shape[0]
+        sc=simplicial_complex((self.v,self.t))
+        
+       
+        sc.weights=self.weights
+        sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=torch.float32)
+        sc[0].d=torch.tensor(sc[0].d.todense(), requires_grad=False, dtype=torch.float32)
+        M=sc[0].star_inv@(-(sc[0].d).T)@sc[1].star@sc[0].d
+        M=M[self.interior_indices][:,self.interior_indices]
+        res=[]
+        for i in range(batch_size):
+                     res.append(torch.linalg.solve(M,X[i,self.interior_indices]))
+                 
+        return torch.reshape(torch.cat(res, dim=0),(batch_size,M.shape[0]))
+
+
 
 model=MyModel(w)
 
-# loss function and optimizer
-loss_fn = nn.BCELoss()  # binary cross entropy
+
+loss_fn = nn.MSELoss()  # binary cross entropy
 optimizer = optim.Adam(model.parameters(), lr=0.001)
- 
-n_epochs = 50    # number of epochs to run
-batch_size = 10  # size of each batch
-batches_per_epoch = len(Xtrain) // batch_size
- 
-for epoch in range(n_epochs):
-    for i in range(batches_per_epoch):
-        start = i * batch_size
+
+num_batches=len(Xtrain)
+for epoch in range(2):
+    
+    for i in range(num_batches):
+      
         # take a batch
-        Xbatch = Xtrain[start:start+batch_size]
-        ybatch = ytrain[start:start+batch_size]
+        Xbatch = Xtrain[i]
+        ybatch = Ytrain[i]
         # forward pass
-        y_pred = model(Xbatch)
-        loss = loss_fn(y_pred, ybatch)
-        # backward pass
         optimizer.zero_grad()
+        y_pred = model(Xbatch)
+        loss =loss_fn(y_pred, ybatch[:,model.interior_indices])
         loss.backward()
-        # update weights
         optimizer.step()
+        
+
+
+
+        # model.sc.weights=model.weights
+        # print(model.sc.weights)
+    
  
-# evaluate trained model with test set
-with torch.no_grad():
-    y_pred = model(X)
-accuracy = (y_pred.round() == y).float().mean()
-print("Accuracy {:.2f}".format(accuracy * 100))
+# # evaluate trained model with test set
+# with torch.no_grad():
+#     y_pred = model(X)
+# accuracy = (y_pred.round() == y).float().mean()
+# print("Accuracy {:.2f}".format(accuracy * 100))
