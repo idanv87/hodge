@@ -15,7 +15,7 @@ import pickle
 
 from sklearn.model_selection import train_test_split
 
-
+from constants import Constants
 
 path1='/Users/idanversano/Documents/clones/pydec/data/input/'
 path2='/Users/idanversano/Documents/clones/pydec/data/output/'
@@ -26,7 +26,7 @@ from utils import *
 v,t,boundary_ind,interior_ind=create_mesh()
 w0=np.random.rand(len(v))*0
 w=torch.tensor(w0,requires_grad=True, dtype=torch.float32)
-batch_size=3
+
 # sc=simplicial_complex((v,t))
 
 # sc.weights=w
@@ -41,8 +41,8 @@ Xtrain, Xtest, Ytrain, Ytest = train_test_split( f, u, test_size=0.33, random_st
 
 # u=torch.reshape(torch.tensor(np.array(u),dtype=torch.float32), np.array(u).shape)
 # f=torch.reshape(torch.tensor(np.array(f),dtype=torch.float32), np.array(f).shape)
-Xtrain=batch_divide(Xtrain, batch_size)
-Ytrain=batch_divide(Ytrain, batch_size)
+Xtrain=batch_divide(Xtrain, Constants.batch_size)
+Ytrain=batch_divide(Ytrain, Constants.batch_size)
 # print(len(Xtrain))
 # Xtrain=[f]
 # Ytrain=[u]
