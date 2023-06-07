@@ -9,6 +9,11 @@ from scipy.linalg import det
 from scipy import sqrt,inner
 import torch
 
+
+from constants import Constants
+def orient(a,b,c):
+      return torch.sign((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]))
+     
 def unsigned_volume(pts):
     # pts = asarray(pts) 
 
@@ -42,7 +47,7 @@ def circumcenter_barycentric(pts, weights):
     assert(rows <= cols + 1) 
 
     if rows==1:
-        bary_coords=torch.tensor([1.])
+        bary_coords=torch.tensor([1], dtype=torch.float64)
     if rows==2:
         p1=pts[0,:]
         p2=pts[1,:]
@@ -60,11 +65,11 @@ def circumcenter_barycentric(pts, weights):
     if rows==3:
         center=circumcenter(pts, weights)[0]
         
-        A=torch.vstack((pts.T,torch.ones((1,rows))))
+        A=torch.vstack((pts.T,torch.ones((1,rows), dtype=torch.float64)))
         # A = bmat( [[ pts.T], [ones((1,rows))] ]
             #   )
     
-        b = torch.hstack((center,torch.tensor([1])))
+        b = torch.hstack((center,torch.tensor([1], dtype=torch.float64)))
         
 
         x = torch.linalg.solve(A,b)
@@ -107,11 +112,16 @@ def weighted_circ(pts,weights):
     if len(pts)==3:
         
         
-    
-        A=torch.tensor([[0,-1],[1,0]], dtype=torch.float32)
+        if orient(pts[0],pts[1],pts[2])>0:
+                  A=torch.tensor([[0,-1],[1,0]], dtype=Constants.dtype)
+        else:  
+                  A=torch.tensor([[0,-1],[1,0]], dtype=Constants.dtype).T 
+        
+        
         n1=torch.matmul(A,pts[0]-pts[2])
         n2=torch.matmul(A,pts[1]-pts[0])
         n=[n1,n2]
+      
         k=2
         for i in range(k):
            

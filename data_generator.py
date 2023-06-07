@@ -16,7 +16,7 @@ for path in pathes:
 
 
 v,t,boundary_ind,interior_ind=create_mesh()
-kx=range(10)
+kx=[1]
 ky=kx
 u=[]
 f=[]

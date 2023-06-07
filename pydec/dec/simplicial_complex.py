@@ -176,11 +176,13 @@ class simplicial_complex(list):
             # data.star = sparse.lil_matrix((form_size,form_size))                      
             # data.star_inv = sparse.lil_matrix((form_size,form_size))
             
-            stardiag = data.dual_volume / data.primal_volume
+            stardiag = data.dual_volume.type(torch.DoubleTensor) / data.primal_volume.type(torch.DoubleTensor)
             N = len(stardiag)
 
             data.star     = torch.diag(stardiag)
             data.star_inv = torch.diag(1.0/stardiag)
+            # data.star     = torch.diag(stardiag)
+            # data.star_inv = torch.diag(1.0/stardiag)
             
             #Choose sign of star_inv to satisfy (star_inv * star) = -1 ^(k*(n-k))
             n,k = self.complex_dimension(),dim            

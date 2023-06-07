@@ -24,9 +24,13 @@ path2='/Users/idanversano/Documents/clones/pydec/data/output/'
 from utils import *
 
 v,t,boundary_ind,interior_ind=create_mesh()
+# sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=torch.float32)
+# sc[0].d=torch.tensor(sc[0].d.todense(), requires_grad=False, dtype=torch.float32)
 w0=np.random.rand(len(v))*0
-w=torch.tensor(w0,requires_grad=True, dtype=torch.float32)
+# w0[boundary_ind]=0
+w=torch.tensor(w0,requires_grad=True, dtype=Constants.dtype)
 
+# plot_mesh(v,t,None,boundary_ind)
 # sc=simplicial_complex((v,t))
 
 # sc.weights=w
@@ -37,17 +41,19 @@ w=torch.tensor(w0,requires_grad=True, dtype=torch.float32)
 
 
 f,u=load_data()
-Xtrain, Xtest, Ytrain, Ytest = train_test_split( f, u, test_size=0.33, random_state=42)
+# Xtrain, Xtest, Ytrain, Ytest = train_test_split( f, u, test_size=0.33, random_state=42)
+# Xtrain=batch_divide(Xtrain, Constants.batch_size)
+# Ytrain=batch_divide(Ytrain, Constants.batch_size)
 
 # u=torch.reshape(torch.tensor(np.array(u),dtype=torch.float32), np.array(u).shape)
 # f=torch.reshape(torch.tensor(np.array(f),dtype=torch.float32), np.array(f).shape)
-Xtrain=batch_divide(Xtrain, Constants.batch_size)
-Ytrain=batch_divide(Ytrain, Constants.batch_size)
-# print(len(Xtrain))
+Xtrain=batch_divide(f, Constants.batch_size)
+Ytrain=batch_divide(u, Constants.batch_size)
+# Xtrain=f
+# Ytrain=u
 # Xtrain=[f]
 # Ytrain=[u]
-
-    
+  
 
 class MyModel(nn.Module):
     """ Custom Linear layer but mimics a standard linear layer """
@@ -56,6 +62,8 @@ class MyModel(nn.Module):
         self.weights = nn.Parameter(weight)  
         # self.interior_indices=interior_indices
         self.v,self.t,self.boundary_ind,self.interior_indices=create_mesh()
+        
+        
 
     
        
@@ -64,28 +72,56 @@ class MyModel(nn.Module):
         batch_size=X.shape[0]
         sc=simplicial_complex((self.v,self.t))
         
-       
+        # print(self.weights)
         sc.weights=self.weights
-        sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=torch.float32)
-        sc[0].d=torch.tensor(sc[0].d.todense(), requires_grad=False, dtype=torch.float32)
+      
+        sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=Constants.dtype)
+        sc[0].d=torch.tensor(sc[0].d.todense(), requires_grad=False, dtype=Constants.dtype)
+        # A=torch.tensor(sc[0].star_inv, dtype=Constants.dtype)
+        # B=torch.tensor((-(sc[0].d).T),dtype=Constants.dtype)
+        # C=torch.tensor(sc[1].star, dtype=Constants.dtype)
+        # D=torch.tensor(sc[0].d, dtype=Constants.dtype)
+        # print(sc[0].star_inv.requires_grad)
+        # M=-A@B@C@D
+      
         M=sc[0].star_inv@(-(sc[0].d).T)@sc[1].star@sc[0].d
+       
+        # M=(-(sc[0].d).T)@sc[0].d
+        # print(M.shape)
+        # print(torch.linalg.matrix_rank(M))
+        
         M=M[self.interior_indices][:,self.interior_indices]
+        # print(M.shape)
+        # print(torch.linalg.matrix_rank(M))
+        # plot_mesh(v,t)
         res=[]
+      
         for i in range(batch_size):
                      res.append(torch.linalg.solve(M,X[i,self.interior_indices]))
+                     
                  
-        return torch.reshape(torch.cat(res, dim=0),(batch_size,M.shape[0]))
+        # return torch.reshape(torch.cat(res, dim=0),(batch_size,M.shape[0]))
+        return M
 
 
+# loss_fn = nn.MSELoss()
+# model=MyModel(w)
 
-model=MyModel(w)
+# Xbatch = Xtrain[0]
+# ybatch = Ytrain[0]
+# print(ybatch)
+# print(ybatch.shape)
+# forward pass
+# y_pred = model(Xbatch)
+# print(abs(model(Xbatch)@ybatch[0,model.interior_indices].T-Xbatch[0,model.interior_indices].T))
 
-
-loss_fn = nn.MSELoss()  # binary cross entropy
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+# loss =loss_fn(y_pred, ybatch[:,model.interior_indices])
+# print(ybatch[:,model.interior_indices]-y_pred)
+# loss_fn = nn.MSELoss()  # binary cross entropy
+# optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 num_batches=len(Xtrain)
-for epoch in range(2):
+for epoch in range(0):
     
     for i in range(num_batches):
       
@@ -98,7 +134,36 @@ for epoch in range(2):
         loss =loss_fn(y_pred, ybatch[:,model.interior_indices])
         loss.backward()
         optimizer.step()
+        # print(loss)
         
+        
+f,u=create_data(v,1,1)
+# u=torch.reshape(torch.tensor(u,dtype=torch.float32), (1,len(u)))
+# f=torch.reshape(torch.tensor(f,dtype=torch.float32), (1,len(f)))
+sc=simplicial_complex((v,t))
+sc.weights=w0*0
+sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=Constants.dtype)
+sc[0].d=torch.tensor(sc[0].d.todense(), requires_grad=False, dtype=Constants.dtype)
+
+M=sc[0].star_inv@(-(sc[0].d).T)@sc[1].star@sc[0].d
+# print(torch.argmin(sc[0].star))
+# print(sc[1].star[138,138])
+
+# print(sc[0].d[138])
+# print(np.linalg.norm(v[70]-v[45]))
+
+# # print(sc[0].star[0,0])
+choosen=interior_ind
+M=M[:,choosen][choosen]
+
+# print(torch.linalg.matrix_rank(torch.tensor(M.todense())))
+# print(M.shape)
+# print((M*dx**2).todense())
+err=abs(M@u[choosen]-f[choosen])
+print(err)
+# print(M[0,0])
+
+# print(choosen)
 
 
 

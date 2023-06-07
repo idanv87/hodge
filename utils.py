@@ -7,6 +7,8 @@ import pickle
 from numpy import loadtxt
 import torch
 
+from constants import Constants
+
 path1='/Users/idanversano/Documents/clones/pydec/data/input/'
 path2='/Users/idanversano/Documents/clones/pydec/data/output/'
 
@@ -20,20 +22,27 @@ def bc(v):
 
 def create_data(vertices,kx,ky):
     k=kx**2+ky**2
+  
     f=[]
     u=[]
     for v in vertices:
-      f.append(-k*math.pi**2*np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
-      u.append(np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
-    #   u.append(v[0]+2*v[1])
+      # f.append((-k*math.pi**2)*np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
+      # u.append(np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
+      u.append(v[0]**2+v[1])
+      f.append(2.)
     return np.array(f), np.array(u)  
 
-def plot_mesh(v,t,sc=None):
+def plot_mesh(v,t,sc=None, ind=None):
     colors=['red','black']
     ax = gca()
     ax.triplot(v[:,0], v[:,1], t)
+
+    if ind is not None:
+            
+             [ax.scatter(v[i][0],v[i][1],c=colors[0]) for i in ind]
+
     
-    if 1 :
+    if sc is not None :
      for dim in [1,2]:
     
       [ax.scatter(v[0].detach().numpy(),v[1].detach().numpy(),c=colors[dim-1]) for v in sc[dim].circumcenter]
@@ -81,12 +90,14 @@ def load_data():
 def batch_divide(x, batch_size):
   
    n=int(len(x)/batch_size)
+  
    X=[]
    for j in range(n):
       u=x[j*batch_size:(j+1)*batch_size]
-      X.append(torch.reshape(torch.tensor(np.array(u),dtype=torch.float32), np.array(u).shape))
+      X.append(torch.reshape(torch.tensor(np.array(u),dtype=Constants.dtype), np.array(u).shape))
 
    return X
+
 
    
 
