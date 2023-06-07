@@ -16,8 +16,8 @@ for path in pathes:
 
 
 v,t,boundary_ind,interior_ind=create_mesh()
-kx=[1]
-ky=kx
+kx=Constants.k_train
+ky=1
 u=[]
 f=[]
 for k1 in kx:

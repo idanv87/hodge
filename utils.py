@@ -26,10 +26,10 @@ def create_data(vertices,kx,ky):
     f=[]
     u=[]
     for v in vertices:
-      # f.append((-k*math.pi**2)*np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
-      # u.append(np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
-      u.append(v[0]**2+v[1])
-      f.append(2.)
+      f.append((1+k*math.pi**2)*np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
+      u.append(np.sin(kx*math.pi*v[0])*np.sin(ky*math.pi*v[1]))
+      # u.append(v[0]**2+v[1])
+      # f.append(2.)
     return np.array(f), np.array(u)  
 
 def plot_mesh(v,t,sc=None, ind=None):

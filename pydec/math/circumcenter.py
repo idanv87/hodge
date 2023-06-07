@@ -11,6 +11,7 @@ import torch
 
 
 from constants import Constants
+
 def orient(a,b,c):
       return torch.sign((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]))
      

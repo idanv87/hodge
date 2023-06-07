@@ -198,6 +198,7 @@ class simplicial_complex(list):
         
         for i,s in enumerate(data.simplices):
             pts = self.vertices[[x for x in s],:]
+            # print(s)
            
             data.bary_circumcenter[i] = circumcenter_barycentric(pts,self.weights[s])
             
