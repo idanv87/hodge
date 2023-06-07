@@ -178,6 +178,9 @@ class simplicial_complex(list):
             
             stardiag = data.dual_volume.type(torch.DoubleTensor) / data.primal_volume.type(torch.DoubleTensor)
             N = len(stardiag)
+            # print('vaelue')
+            # print(torch.max(stardiag))
+            # print(torch.min(stardiag))
 
             data.star     = torch.diag(stardiag)
             data.star_inv = torch.diag(1.0/stardiag)

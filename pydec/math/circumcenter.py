@@ -30,7 +30,8 @@ def unsigned_volume(pts):
         
     A = pts[1:] - pts[0]
 
-   
+    if sqrt(abs(det(torch.inner(A,A))))/math.factorial(M)<1e-5:
+         print('error')
     return sqrt(abs(det(torch.inner(A,A))))/math.factorial(M)
 
 
@@ -111,6 +112,8 @@ def weighted_circ(pts,weights):
                   )**2+weights[0]-weights[1]
             )*n
     if len(pts)==3:
+        if orient(pts[0],pts[1],pts[2])==0:
+             print('stop')
         
         
         if orient(pts[0],pts[1],pts[2])>0:
@@ -131,6 +134,7 @@ def weighted_circ(pts,weights):
                 torch.vstack((pts[0],pts[i+1]))
                 )**2+weights[0]-weights[i+1]
             )*n[i]   
-        
+
+ 
     return s
     

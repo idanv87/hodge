@@ -3,6 +3,7 @@ import torch.nn as nn
 import math
 from functools import reduce
 import numpy as np
+import sys
 
 
 import numpy as np
@@ -41,10 +42,14 @@ w=torch.tensor(w0,requires_grad=True, dtype=Constants.dtype)
 
 
 f,u=load_data()
-Xtrain, Xtest, Ytrain, Ytest = train_test_split( f, u, test_size=0.1, random_state=42)
+
+# Xtrain, Xtest, Ytrain, Ytest = train_test_split( f, u, test_size=0.3, shuffle = False, stratify = None)
+Xtrain=f
+Ytrain=u
 Constants.batch_size=len(Xtrain)
 Xtrain=batch_divide(Xtrain, Constants.batch_size)
 Ytrain=batch_divide(Ytrain, Constants.batch_size)
+print(Xtrain[0].shape)
 # # u=torch.reshape(torch.tensor(np.array(u),dtype=torch.float32), np.array(u).shape)
 # # f=torch.reshape(torch.tensor(np.array(f),dtype=torch.float32), np.array(f).shape)
 # Xtrain=batch_divide(f, Constants.batch_size)
@@ -69,11 +74,11 @@ class MyModel(nn.Module):
         
         # print(self.weights)
         sc.weights=self.weights
-      
+        
         sc.vertices=torch.tensor(sc.vertices, requires_grad=False, dtype=Constants.dtype)
         sc[0].d=torch.tensor(sc[0].d.todense(), requires_grad=False, dtype=Constants.dtype)
 
-        M=-sc[0].star_inv@(-(sc[0].d).T)@sc[1].star@sc[0].d
+        M=-(sc[0].star_inv)@(-(sc[0].d).T)@(sc[1].star)@sc[0].d
         # print(M.requires_grad)
        
         # M=(-(sc[0].d).T)@sc[0].d
@@ -83,7 +88,7 @@ class MyModel(nn.Module):
         M=M[self.interior_indices][:,self.interior_indices]+torch.eye(len(self.interior_indices))
         # print(torch.linalg.matrix_rank(M))
         # print(M.shape)
-        # print(torch.linalg.matrix_rank(M))
+        
         # plot_mesh(v,t)
         res=[]
       
@@ -111,8 +116,11 @@ model=MyModel(w)
 loss_fn = nn.MSELoss()  # binary cross entropy
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
-num_batches=len(Xtrain)
-for epoch in range(20):
+# print(Xtrain[0].shape)
+
+for epoch in range(10):
+    num_batches=len(Xtrain)
+
     
     for i in range(num_batches):
       
@@ -127,9 +135,11 @@ for epoch in range(20):
      
         loss.backward()
         optimizer.step()
-   
-        print(loss)
-        
+        print(loss)  
+        if loss >1e6:
+              print('stop')
+              sys.exit(1)
+      
         
 # f,u=create_data(v,1,1)
 # # u=torch.reshape(torch.tensor(u,dtype=torch.float32), (1,len(u)))
